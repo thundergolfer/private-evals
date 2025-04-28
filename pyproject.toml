@@ -1,0 +1,24 @@
+[project]
+name = "llm-benchmarks"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "python-dotenv>=1.1.0",
+    "httpx>=0.27.0",
+    "anthropic>=0.22.2",
+    "openai>=1.30.1",
+    "google-genai>=0.8.0",
+    "modal>=0.57.13",
+    "pillow>=10.2.0",
+    "Markdown>=3.5.2",
+    "invoke>=2.2.0",
+    "aiohttp>=3.11.17",
+]
+
+[dependency-groups]
+dev = [
+    "asciinema>=2.4.0",
+    "pytest>=8.3.5",
+]

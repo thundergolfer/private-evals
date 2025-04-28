@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>thundergolfer/private-evals — manual eval review</title>
+    <!-- Include marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Include highlight.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .test-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-item h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        /* Style for the rendered markdown container - Solarized Light */
+        .markdown-content {
+            background-color: #fdf6e3; /* Solarized Base3 */
+            color: #657b83; /* Solarized Base00 */
+            border: 1px solid #eee8d5; /* Solarized Base2 */
+            padding: 10px 15px;
+            border-radius: 3px;
+            margin-top: 10px;
+            max-height: 500px; /* Limit height */
+            overflow-y: auto; /* Add scrollbar if needed */
+        }
+        /* Solarized styling for elements within markdown */
+        .markdown-content pre {
+            background-color: #eee8d5; /* Solarized Base2 */
+            color: #586e75; /* Solarized Base01 */
+            padding: 10px;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: monospace;
+            font-size: 0.9em;
+            border: 1px solid #eee8d5; /* Match background slightly */
+        }
+        .markdown-content code {
+            background-color: #eee8d5; /* Solarized Base2 */
+            color: #586e75; /* Solarized Base01 */
+            padding: 0.2em 0.4em;
+            font-size: 85%;
+            border-radius: 3px;
+        }
+        /* Reduced header sizes */
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4 {
+             margin-top: 0.8em; /* Reduced */
+             margin-bottom: 0.4em; /* Reduced */
+             border-bottom: 1px solid #eee8d5; /* Solarized Base2 */
+             padding-bottom: 0.2em; /* Reduced */
+             color: #073642; /* Solarized Base02 */
+             font-weight: 600;
+        }
+        .markdown-content h1 { font-size: 1.4em; }
+        .markdown-content h2 { font-size: 1.2em; }
+        .markdown-content h3 { font-size: 1.1em; }
+        .markdown-content h4 { font-size: 1.0em; }
+
+        .markdown-content a { color: #268bd2; } /* Solarized Blue */
+        .markdown-content a:hover { color: #1a6b9e; }
+
+        .markdown-content blockquote {
+            border-left: 3px solid #eee8d5; /* Solarized Base2 */
+            padding-left: 10px;
+            margin-left: 5px;
+            color: #93a1a1; /* Solarized Base1 */
+        }
+
+        .rating-section {
+            margin-top: 15px; /* Increased margin */
+            display: flex;
+            align-items: center;
+        }
+        .rating-section label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .rating-section input[type="number"] {
+            padding: 5px;
+            width: 60px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .status-indicator {
+            margin-left: 10px;
+            font-style: italic;
+            color: #888;
+            font-size: 0.9em;
+        }
+        .status-saving {
+             color: #e67e22;
+        }
+        .status-saved {
+             color: #2ecc71;
+        }
+        .status-error {
+             color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <h1>thundergolfer/private-evals — manual eval review</h1>
+    <div id="results-container">
+        <p>Loading results...</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const resultsContainer = document.getElementById('results-container');
+            let saveTimeout = null;
+
+            fetch('/results')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    resultsContainer.innerHTML = ''; // Clear loading message
+                    if (!data || !data.tests || data.tests.length === 0) {
+                        resultsContainer.innerHTML = '<p>No test results found.</p>';
+                        return;
+                    }
+
+                    data.tests.forEach(test => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.classList.add('test-item');
+                        itemDiv.dataset.uniqueId = test.unique_id; // Store unique ID
+
+                        // Prepare rendered markdown content
+                        const markdownHtml = test.response ? marked.parse(test.response) : '<p><em>No response recorded.</em></p>';
+
+                        // Display basic info and rendered markdown
+                        itemDiv.innerHTML = `
+                            <h3>${escapeHtml(test.test_slug)} (${escapeHtml(test.test_category)})</h3>
+                            <p><strong>Provider:</strong> ${escapeHtml(test.provider)} | <strong>Model:</strong> ${escapeHtml(test.model)}</p>
+                            <p><strong>Success:</strong> ${test.success ? 'Yes' : 'No'}</p>
+                            <h4>Full Response (Rendered Markdown):</h4>
+                            <div class="markdown-content">${markdownHtml}</div>
+                            <div class="rating-section">
+                                <label for="rating-${test.unique_id}">Rating (0-10):</label>
+                                <input type="number"
+                                       id="rating-${test.unique_id}"
+                                       name="rating"
+                                       min="0"
+                                       max="10"
+                                       step="1"
+                                       value="${test.rating_10 !== null ? test.rating_10 : ''}"
+                                       data-unique-id="${test.unique_id}">
+                                <span class="status-indicator"></span>
+                            </div>
+                        `;
+
+                        resultsContainer.appendChild(itemDiv);
+
+                        // Apply syntax highlighting to code blocks within the new item
+                        itemDiv.querySelectorAll('.markdown-content pre code').forEach((block) => {
+                            hljs.highlightElement(block);
+                        });
+
+                        // Add event listener for rating changes
+                        const ratingInput = itemDiv.querySelector('input[name="rating"]');
+                        ratingInput.addEventListener('change', handleRatingChange);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching results:', error);
+                    resultsContainer.innerHTML = `<p>Error loading results: ${error.message}. Please check if the Flask app is running and results.json exists.</p>`;
+                });
+
+            function handleRatingChange(event) {
+                const input = event.target;
+                const uniqueId = input.dataset.uniqueId;
+                const ratingValue = input.value === '' ? null : parseInt(input.value, 10);
+                const itemDiv = input.closest('.test-item');
+                const statusIndicator = itemDiv.querySelector('.status-indicator');
+
+                // Basic client-side validation
+                if (ratingValue !== null && (isNaN(ratingValue) || ratingValue < 0 || ratingValue > 10)) {
+                    statusIndicator.textContent = 'Invalid (0-10)';
+                    statusIndicator.className = 'status-indicator status-error';
+                    return; // Don't save invalid input
+                }
+
+                statusIndicator.textContent = 'Saving...';
+                statusIndicator.className = 'status-indicator status-saving';
+
+                // Debounce saving slightly might be good if needed, but change event is usually sufficient
+                fetch('/update_rating', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ unique_id: uniqueId, rating: ratingValue })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        statusIndicator.textContent = 'Saved';
+                         statusIndicator.className = 'status-indicator status-saved';
+                        // Clear 'Saved' message after a delay
+                        clearTimeout(saveTimeout);
+                        saveTimeout = setTimeout(() => {
+                           if (statusIndicator.textContent === 'Saved') {
+                               statusIndicator.textContent = '';
+                               statusIndicator.className = 'status-indicator';
+                           }
+                        }, 2000);
+                    } else {
+                        throw new Error(result.message || 'Failed to save rating');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating rating:', error);
+                    statusIndicator.textContent = `Error: ${error.message}`;
+                    statusIndicator.className = 'status-indicator status-error';
+                });
+            }
+
+            // Helper to escape HTML entities (for non-markdown content)
+            function escapeHtml(unsafe) {
+                if (typeof unsafe !== 'string') return '';
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comparison Table</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        background-color: #f7f7f9;
+        color: #111;
+        margin: 0;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      /* Main container with fixed width and overflow scroll */
+      .eval-container {
+        max-width: 100%;
+        margin: 0 auto;
+        overflow-x: auto; /* Enable horizontal scrolling */
+      }
+
+      /* Set a minimum width for the scrollable content */
+      .eval-table {
+        min-width: 860px; /* Reduced minimum width for more compact display */
+        width: 100%;
+      }
+
+      .eval-header {
+        display: grid;
+        grid-template-columns: 180px repeat(8, minmax(80px, 0.8fr)); /* Reduced column widths */
+        margin-bottom: 10px;
+        width: 100%;
+      }
+
+      .eval-header-item {
+        text-align: center;
+        padding: 5px;
+      }
+
+      .eval-header-item:first-child {
+        text-align: left;
+      }
+
+      .provider-header {
+        grid-column: span 2;
+        text-align: center;
+        font-size: 16px;
+        font-weight: bold;
+        border-bottom: 1px solid #e0e0e5;
+        padding: 5px;
+        margin-bottom: 5px;
+      }
+
+      .category-title {
+        font-size: 20px;
+        font-weight: bold;
+        padding: 20px 0 10px 0;
+        border-top: 1px solid #e0e0e5;
+        grid-column: 1 / -1;
+      }
+
+      .feature-row {
+        display: grid;
+        grid-template-columns: 180px repeat(8, minmax(80px, 0.8fr)); /* Reduced column widths */
+        border-top: 1px solid #e0e0e5;
+      }
+
+      .summary-row {
+        display: grid;
+        grid-template-columns: 180px repeat(8, minmax(80px, 0.8fr)); /* Reduced column widths */
+        border-top: 1px solid #e0e0e5;
+        background-color: rgba(0, 0, 0, 0.05);
+        font-weight: bold;
+      }
+
+      .feature-name {
+        padding: 10px 5px;
+        text-align: left;
+      }
+
+      .feature-value {
+        padding: 10px 8px 10px 8px;
+        text-align: center;
+      }
+
+      /* Apply alternating shading to provider columns */
+      /* Target every 4n+2 and 4n+3 columns for shading (pairs of columns) */
+      .feature-row > div:nth-child(4n+2),
+      .feature-row > div:nth-child(4n+3),
+      .summary-row > div:nth-child(4n+2),
+      .summary-row > div:nth-child(4n+3) {
+        background-color: rgba(0, 0, 0, 0.03);
+      }
+
+      /* Apply the same shading to header items */
+      .eval-header-item:nth-child(4n+2),
+      .eval-header-item:nth-child(4n+3) {
+        background-color: rgba(0, 0, 0, 0.03);
+      }
+
+      .check {
+        color: #4caf50;
+        font-size: 20px;
+      }
+
+      .cross {
+        color: #f44336;
+        font-size: 20px;
+      }
+
+      /* Make first column sticky */
+      .feature-name,
+      .eval-header-item:first-child {
+        position: sticky;
+        left: 0;
+        background-color: #f7f7f9;
+        z-index: 1;
+      }
+
+      /* Score bar styles */
+      .score-bar {
+        width: 100%;
+        height: 8px;
+        background-color: #e0e0e5;
+        border-radius: 4px;
+        margin-top: 5px;
+        overflow: hidden;
+      }
+
+      .score-fill {
+        height: 100%;
+        border-radius: 4px;
+      }
+
+      .score-red {
+        background-color: #f44336;
+      }
+
+      .score-yellow {
+        background-color: #ffc107;
+      }
+
+      .score-green {
+        background-color: #4caf50;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="eval-container">
+      <h1><pre>thundergolfer private evals</pre></h1>
+
+      <!-- <div class="eval-header">
+        <div class="eval-header-item"></div>
+        <div class="provider-header" style="grid-column: 2 / span 2">OpenAI GPT 4o</div>
+        <div class="provider-header" style="grid-column: 4 / span 2">Claude 3.5 Sonnet</div>
+        <div class="provider-header" style="grid-column: 6 / span 2">Gemini 2.5 Pro</div>
+      </div> -->
+
+      <!-- <div class="eval-header">
+        <div class="eval-header-item">
+          <h2>Name</h2>
+        </div>
+        <div class="eval-header-item">
+          <h3>Rating /10</h3>
+        </div>
+        <div class="eval-header-item">
+          <h3>Pass/Fail</h3>
+        </div>
+        <div class="eval-header-item">
+          <h3>Rating /10</h3>
+        </div>
+        <div class="eval-header-item">
+          <h3>Pass/Fail</h3>
+        </div>
+        <div class="eval-header-item">
+          <h3>Rating /10</h3>
+        </div>
+        <div class="eval-header-item">
+          <h3>Pass/Fail</h3>
+        </div>
+      </div> -->
+
+      <!-- PLACE HEADER HERE -->
+      <!-- REPLACE TESTS HERE -->
+      <!-- PLACE SUMMARY HERE -->
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          // Find all feature-value divs that contain a numeric score
+          const scoreElements = document.querySelectorAll('.feature-value');
+          
+          scoreElements.forEach(element => {
+            const text = element.textContent.trim();
+            // Check if the text is a number (and not None, N/A, or contains a check/cross)
+            if (!isNaN(text) && text !== '' && text !== 'None' && text !== 'N/A' && 
+                !element.querySelector('.check') && !element.querySelector('.cross')) {
+              
+              const score = parseFloat(text);
+              if (!isNaN(score)) {
+                // Create a container for score and bar
+                const container = document.createElement('div');
+                container.className = 'score-container';
+                container.style.display = 'flex';
+                container.style.alignItems = 'center';
+                
+                // Create score text element
+                const scoreText = document.createElement('div');
+                scoreText.className = 'score-text';
+                scoreText.textContent = text;
+                scoreText.style.marginRight = '5px';
+                
+                // Create score bar container
+                const scoreBar = document.createElement('div');
+                scoreBar.className = 'score-bar';
+                
+                // Create score fill
+                const scoreFill = document.createElement('div');
+                scoreFill.className = 'score-fill';
+                
+                // Set width based on score (out of 10)
+                const width = Math.min(Math.max(score * 10, 0), 100);
+                scoreFill.style.width = `${width}%`;
+                
+                // Set color based on score
+                if (score < 4) {
+                  scoreFill.classList.add('score-red');
+                } else if (score <= 7) {
+                  scoreFill.classList.add('score-yellow');
+                } else {
+                  scoreFill.classList.add('score-green');
+                }
+                
+                // Add to DOM
+                scoreBar.appendChild(scoreFill);
+                container.appendChild(scoreText);
+                container.appendChild(scoreBar);
+                
+                // Clear the original text and add our new elements
+                element.textContent = '';
+                element.appendChild(container);
+              }
+            }
+          });
+        });
+      </script>
+    </div>
+  </body>
+</html>
